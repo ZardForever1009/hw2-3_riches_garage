@@ -16,7 +16,7 @@ public:
 };
 
 // insert at front (the end is the longest car haven't been driven)
-void InsertNode(Car*& head, int code){
+void InsertHeadCar(Car*& head, const int& code){
        // no head
        if(head==nullptr){
            head=new Car();
@@ -36,16 +36,16 @@ void InsertNode(Car*& head, int code){
     return;
 }
 
-// delete the end of linked list
-void DeleteNode(Car*& head){
+// delete the end of linked list (when garage is full)
+void DeleteTailCar(Car*& head){
     if(head==nullptr){
-        cout<<"Car list is empty\n";
+        cout<<"Car garage is empty\n";
         return;
     }
     // 2 situation: only 1 car left v.s. more than 1 car
     Car* restore_head=head;
     while(head!=nullptr){
-        if(head->prev==nullptr&&head->next!=nullptr){ // only one car
+        if(head->prev==nullptr&&head->next==nullptr){ // only one car
             head=nullptr;
             return;
         }
@@ -54,7 +54,33 @@ void DeleteNode(Car*& head){
             head->prev=nullptr;
             head->code=-1;
             head=nullptr;
+            head=restore_head;
+            return;
         }   
+        head=head->next;
+    }
+}
+
+// delete specified code of car (when driving a car, need to reinsert to renew the time of cars not be droven)
+void DeleteCodeCar(Car*& head, const int& code){
+    if(head==nullptr)cout<<"Car garage is empty\n";
+    Car* restore_head=head;
+    while(head!=nullptr){
+        if(head->code==code){  // find the car to delete
+            if(head->next==nullptr&&head->prev==nullptr){  // special case: the last one car
+                head->code=-1;
+                head=nullptr;
+                return;
+            }
+            if(head->prev==nullptr); // head with more than one car
+            else (head->prev)->next=head->next;
+            if(head->next==nullptr); // tail with more than one car
+            else (head->next)->prev=head->prev;
+            head->prev=nullptr;
+            head->next=nullptr;
+            head->code=-1;
+            break;
+        }
         head=head->next;
     }
     head=restore_head;
@@ -62,7 +88,7 @@ void DeleteNode(Car*& head){
 }
 
 // get car total count
-int get_car_count(Car* head){
+int current_car_count(Car* head){
     int count=0;
     while(head!=nullptr){
         count++;
@@ -80,18 +106,42 @@ bool is_in_garage(Car* head, const int& code){
     return false;
 } 
 
+// print out garage (from the latest to oldest)
+void print_garage(Car* head){
+    if(head==nullptr)cout<<"Car garage is empty\n";
+    else{
+        while(head!=nullptr){
+            cout<<head->code<<" ";
+            head=head->next;
+        }
+        cout<<endl;
+    }
+    return;
+}
+
 // garage process
 void rich_man_garage(){
     int garage_size=0;
     cin>>garage_size;
     cout<<"The size of garage is "<<garage_size<<endl;
-    string action;
+    string action, car_code;
+    int new_car_code=0;
+    Car* head=nullptr;
     while(cin>>action){
-        if(action=="buy"){
-            
+        if(action=="buy"){ // need to consider if garage is full
+            if(current_car_count(head)==garage_size)DeleteTailCar(head);            
+            InsertHeadCar(head, new_car_code);
+            new_car_code++;
+            print_garage(head);
         }
         else if(action=="drive"){
-            
+            cin>>car_code;            
+            if(!is_in_garage(head, stoi(car_code)))cout<<"This car is not in the garage"<<endl;
+            else{   // car is in the garage (move it out and repark in the front)
+                DeleteCodeCar(head, stoi(car_code)); // move it out
+                InsertHeadCar(head, stoi(car_code)); // repark in the head
+                print_garage(head);
+            }             
         }
         else cout<<"> No corresponding function\n";
     }
