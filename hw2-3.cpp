@@ -50,10 +50,9 @@ void DeleteTailCar(Car*& head){
             return;
         }
         else if(head->next==nullptr){   // reach the last one car
-            (head->prev)->next=nullptr;
-            head->prev=nullptr;
-            head->code=-1;
-            head=nullptr;
+            head=head->prev;               
+            head->next=nullptr;
+            delete head->next;
             head=restore_head;
             return;
         }   
@@ -68,23 +67,30 @@ void DeleteCodeCar(Car*& head, const int& code){
     while(head!=nullptr){
         if(head->code==code){  // find the car to delete
             if(head->next==nullptr&&head->prev==nullptr){  // special case: the last one car
-                head->code=-1;
                 head=nullptr;
-                return;
             }
-            if(head->prev==nullptr); // head with more than one car
-            else (head->prev)->next=head->next;
-            if(head->next==nullptr); // tail with more than one car
-            else (head->next)->prev=head->prev;
-            head->prev=nullptr;
-            head->next=nullptr;
-            head->code=-1;
-            break;
-        }
+            else if(head->next!=nullptr&&head->prev==nullptr){  // head case
+                head=head->next;                
+                head->prev=nullptr;
+                delete head->prev;
+            }
+            else if(head->next==nullptr&&head->prev!=nullptr){   // tail case
+                head=head->prev;               
+                head->next=nullptr;
+                delete head->next;
+                head=restore_head;
+            }
+            else{    // middle car
+                (head->prev)->next=head->next;
+                (head->next)->prev=head->prev;               
+                head=nullptr;
+                delete head;
+                head=restore_head;
+            }
+            return;
+        } 
         head=head->next;
     }
-    head=restore_head;
-    return;
 }
 
 // get car total count
